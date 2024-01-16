@@ -8,7 +8,7 @@ export const test = (req, res) => {
   });
 };
 
-export const updateUser = async (req, res) => {
+export const updateUser = async (req, res, next) => {
   if (req.user.id !== req.params.id)
     return next(
       errorHandler(401, "Unauthorized", "You can update only your account")
@@ -29,10 +29,29 @@ export const updateUser = async (req, res) => {
       { new: true }
     );
     const { password, ...rest } = updatedUser._doc;
-    res.status(200).json({
-      success: true,
-      message: "User updated Successfully!",
-      user: rest,
-    });
+    res.status(200).json(rest);
   } catch (error) {}
+};
+
+export const deleteUser = async (req, res, next) => {
+  if (req.user.id !== req.params.id)
+    return next(
+      errorHandler(401, "Unauthorized", "You can delete only your account")
+    );
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.clearCookie("access_token");
+    res.status(200).json("User has been deleted");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const signoutUser = async (req, res) => {
+  try {
+    res.clearCookie("access_token");
+    res.status(200).json("User has been signed out");
+  } catch (error) {
+    next(error);
+  }
 };
