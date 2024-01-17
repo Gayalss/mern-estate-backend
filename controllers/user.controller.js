@@ -1,6 +1,7 @@
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 import User from "../models/User.model.js";
+import Listing from "../models/Listing.model.js";
 
 export const test = (req, res) => {
   res.json({
@@ -51,6 +52,21 @@ export const signoutUser = async (req, res) => {
   try {
     res.clearCookie("access_token");
     res.status(200).json("User has been signed out");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserListings = async (req, res, next) => {
+  try {
+    if (req.user.id === req.params.id) {
+      const listings = await Listing.find({ userRef: req.params.id });
+      return res.status(200).json(listings);
+    } else {
+      return next(
+        errorHandler(401, "Unauthorized", "You can only see your listings")
+      );
+    }
   } catch (error) {
     next(error);
   }

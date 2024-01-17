@@ -10,16 +10,20 @@ export const createListing = async (req, res, next) => {
   }
 };
 
-export const getUserListings = async (req, res, next) => {
+export const deleteListing = async (req, res, next) => {
+  const listing = await Listing.findById(req.params.id);
+
+  if (!listing) {
+    return next(errorHandler(404, "Listing not found"));
+  }
+
+  if (listing.userRef !== req.user.id) {
+    return next(errorHandler(401, "You can only delete your listings"));
+  }
+
   try {
-    if (req.user.id === req.params.id) {
-      const listings = await Listing.find({ userRef: req.params.id });
-      return res.status(200).json(listings);
-    } else {
-      return next(
-        errorHandler(401, "Unauthorized", "You can only see your listings")
-      );
-    }
+    await Listing.findByIdAndDelete(req.params.id);
+    res.status(200).json("Listing has been deleted!");
   } catch (error) {
     next(error);
   }
